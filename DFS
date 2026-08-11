@@ -111,9 +111,7 @@ public class DFS {
         return new Tree(startIndex, pathParent, searchOrder);
     }
     
-    /**
-     * Recursive DFS helper
-     */
+  
     private void dfsRecursive(int current, int end, boolean[] visited, 
                              int[] parent, List<Integer> searchOrder,
                              List<Integer> bestPath, int[] minStops) {
@@ -228,9 +226,7 @@ public class DFS {
         return path != null ? path.size() - 1 : 0;
     }
     
-    /**
-     * Get the distance of a path using Dijkstra's graph data
-     */
+  
     public double getPathDistance(List<String> path, Dijkstra<String> dijkstra) {
         if (path == null || path.size() < 2) return 0;
         double total = 0;
