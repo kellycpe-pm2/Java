@@ -1,4 +1,3 @@
-package Asg;
 
 import java.util.List;
 
@@ -26,9 +25,5 @@ public interface Graph<V> {
    
    public AbstractGraph<V>.Tree dfs(int v);
    
-   public AbstractGraph<V>.Tree a (int v);
-
-   public Tree dijkstra(V start, V destination)；
-
    public List<V> getPathFromDijkstra(Tree tree, V start, V destination)；
 }
