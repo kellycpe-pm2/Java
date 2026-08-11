@@ -301,6 +301,107 @@ return addEdge(new Edge(u, v));
     /**
      * To be discussed in Section 28.6
      */
+
+/**
+ * Find shortest path using Dijkstra's Algorithm (minimum travel time)
+ * Returns a Tree object containing the search results
+ * If destination is null, finds paths to all vertices
+ */
+public Tree dijkstra(V start, V destination) {
+    int startIndex = getIndex(start);
+    if (startIndex == -1) {
+        return null;
+    }
+    
+    // Data structures
+    double[] distances = new double[vertices.size()];
+    int[] parent = new int[vertices.size()];
+    boolean[] isVisited = new boolean[vertices.size()];
+    List<Integer> searchOrder = new ArrayList<>();
+    
+    // Initialize
+    for (int i = 0; i < distances.length; i++) {
+        distances[i] = Double.MAX_VALUE;
+        parent[i] = -1;
+    }
+    distances[startIndex] = 0;
+    
+    // Priority queue
+    PriorityQueue<NodeDistance> pq = new PriorityQueue<>();
+    pq.add(new NodeDistance(startIndex, 0));
+    
+    // Get destination index (if provided)
+    int destIndex = -1;
+    if (destination != null) {
+        destIndex = getIndex(destination);
+        if (destIndex == -1) {
+            return null;
+        }
+    }
+    
+    while (!pq.isEmpty()) {
+        NodeDistance current = pq.poll();
+        int u = current.index;
+        
+        if (isVisited[u]) continue;
+        isVisited[u] = true;
+        searchOrder.add(u);
+        
+        // Early exit if destination found
+        if (destination != null && u == destIndex) break;
+        
+        // Explore neighbors
+        for (Edge e : neighbors.get(u)) {
+            int v = e.v;
+            if (isVisited[v]) continue;
+            
+            V fromVertex = vertices.get(u);
+            V toVertex = vertices.get(v);
+            double travelTime = getTravelTime(fromVertex, toVertex);
+            
+            double newDist = distances[u] + travelTime;
+            if (newDist < distances[v]) {
+                distances[v] = newDist;
+                parent[v] = u;
+                pq.add(new NodeDistance(v, newDist));
+            }
+        }
+    }
+    
+    return new Tree(startIndex, parent, searchOrder);
+}
+
+/**
+ * Get path from Dijkstra Tree
+ */
+public List<V> getPathFromDijkstra(Tree tree, V start, V destination) {
+    if (tree == null) return null;
+    
+    int startIndex = getIndex(start);
+    int destIndex = getIndex(destination);
+    
+    if (startIndex == -1 || destIndex == -1) {
+        return null;
+    }
+    
+    List<Integer> searchOrder = tree.getSearchOrder();
+    if (!searchOrder.contains(destIndex)) {
+        return null;
+    }
+    
+    // Reconstruct path
+    List<V> path = new ArrayList<>();
+    int current = destIndex;
+    while (current != startIndex && current != -1) {
+        path.add(0, vertices.get(current));
+        current = tree.getParent(current);
+    }
+    if (current == startIndex) {
+        path.add(0, start);
+    }
+    
+    return path;
+}
     public class Tree {
 
         private int root; // The root of the tree
