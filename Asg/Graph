@@ -26,8 +26,6 @@ public interface Graph<V> {
    
    public AbstractGraph<V>.Tree dfs(int v);
    
-   public AbstractGraph<V>.Tree bfs (int v);
-
    public AbstractGraph<V>.Tree a (int v);
 
    public Tree dijkstra(V start, V destination)；
