@@ -1,0 +1,210 @@
+package Asg;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+
+public class BFS {
+
+    List<String> vertices = new ArrayList<>();
+    List<List<Edge>> neighbors = new ArrayList<>();
+
+    /**
+     * Add a station (vertex) to the graph
+     */
+    public boolean addVertex(String vertex) {
+        if (!vertices.contains(vertex)) {
+            vertices.add(vertex);
+            neighbors.add(new ArrayList<Edge>());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Return the index for the specified station name
+     */
+    public int getIndex(String v) {
+        return vertices.indexOf(v);
+    }
+
+    /**
+     * Add a bus route (edge) between two stations with its distance in KM.
+     * The route is undirected, so the connection is added in both directions.
+     */
+    public boolean addEdge(String station1, String station2, double distanceKm) {
+        int u = getIndex(station1);
+        int v = getIndex(station2);
+        neighbors.get(u).add(new Edge(u, v, distanceKm));
+        neighbors.get(v).add(new Edge(v, u, distanceKm));
+        return true;
+    }
+
+    /**
+     * Print the edges together with their distance in KM
+     */
+    public void printEdges() {
+        for (int u = 0; u < neighbors.size(); u++) {
+            System.out.print(vertices.get(u) + ": ");
+            List<String> parts = new ArrayList<>();
+            for (Edge e : neighbors.get(u)) {
+                parts.add(vertices.get(e.v) + " (" + e.weight + " KM)");
+            }
+            System.out.println(parts);
+        }
+    }
+
+    /**
+     * Starting BFS search from station v
+     */
+    public Tree bfs(int v) {
+        List<Integer> searchOrder = new ArrayList<>();
+        int[] parent = new int[vertices.size()];
+        for (int i = 0; i < parent.length; i++) {
+            parent[i] = -1; // Initialize parent[i] to -1
+        }
+        LinkedList<Integer> queue = new LinkedList<>(); // list used as a queue
+        boolean[] isVisited = new boolean[vertices.size()];
+        queue.offer(v); // Enqueue v
+        isVisited[v] = true; // Mark it visited
+        while (!queue.isEmpty()) {
+            int u = queue.poll(); // Dequeue to u
+            searchOrder.add(u); // u searched
+            for (Edge e : neighbors.get(u)) {
+                if (!isVisited[e.v]) {
+                    queue.offer(e.v); // Enqueue w
+                    parent[e.v] = u; // The parent of w is u
+                    isVisited[e.v] = true; // Mark it visited
+                }
+            }
+        }
+        return new Tree(v, parent, searchOrder);
+    }
+
+    /**
+     * Sum the distance (KM) along a full path of consecutive stations
+     */
+    public double getPathDistance(List<String> path) {
+        double total = 0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            int u = getIndex(path.get(i));
+            for (Edge e : neighbors.get(u)) {
+                if (vertices.get(e.v).equals(path.get(i + 1))) {
+                    total += e.weight;
+                    break;
+                }
+            }
+        }
+        return total;
+    }
+
+    /**
+     * Edge inner class - a station's connection to a neighbouring station,
+     * with the distance (KM) between them
+     */
+    public static class Edge {
+
+        public int u; // Starting vertex of the edge
+        public int v; // Ending vertex of the edge
+        public double weight; // Distance in KM
+
+        public Edge(int u, int v, double weight) {
+            this.u = u;
+            this.v = v;
+            this.weight = weight;
+        }
+    }
+
+    /**
+     * Tree inner class - holds the result of a BFS traversal: the search
+     * order and each vertex's parent, so a path back to the root can be
+     * reconstructed
+     */
+    public class Tree {
+
+        private int root;
+        private int[] parent;
+        private List<Integer> searchOrder;
+
+        public Tree(int root, int[] parent, List<Integer> searchOrder) {
+            this.root = root;
+            this.parent = parent;
+            this.searchOrder = searchOrder;
+        }
+
+        public List<Integer> getSearchOrder() {
+            return searchOrder;
+        }
+
+        /**
+         * Return the path of stations from the root to vertex index,
+         * ordered root -> destination
+         */
+        public List<String> getPath(int index) {
+            LinkedList<String> path = new LinkedList<>();
+            do {
+                path.addFirst(vertices.get(index));
+                index = parent[index];
+            } while (index != -1);
+            return path;
+        }
+
+        public void printPath(int index) {
+            List<String> path = getPath(index);
+            System.out.print("A path from " + vertices.get(root) + " to "
+                    + vertices.get(index) + ": ");
+            for (String station : path) {
+                System.out.print(station + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static void main(String[] args) {
+        BFS graph = new BFS();
+
+        String[] stations = {
+            "Batu Ferringhi", "Tanjung Bungah", "Pulau Tikus", "Straits Quay",
+            "Komtar", "Gurney Drive", "Weld Quay", "Sungai Pinang",
+            "USM Gelugor", "Jelutong"
+        };
+        for (String station : stations) {
+            graph.addVertex(station);
+        }
+
+        graph.addEdge("Batu Ferringhi", "Tanjung Bungah", 5.7);
+        graph.addEdge("Batu Ferringhi", "Pulau Tikus", 13);
+        graph.addEdge("Tanjung Bungah", "Pulau Tikus", 7.5);
+        graph.addEdge("Tanjung Bungah", "Straits Quay", 4.3);
+        graph.addEdge("Pulau Tikus", "Straits Quay", 5.9);
+        graph.addEdge("Pulau Tikus", "Komtar", 4.4);
+        graph.addEdge("Straits Quay", "Komtar", 7.9);
+        graph.addEdge("Straits Quay", "Gurney Drive", 4.4);
+        graph.addEdge("Komtar", "Gurney Drive", 3.5);
+        graph.addEdge("Komtar", "Weld Quay", 1.5);
+        graph.addEdge("Komtar", "Sungai Pinang", 2.4);
+        graph.addEdge("Komtar", "USM Gelugor", 9);
+        graph.addEdge("Gurney Drive", "Weld Quay", 4.9);
+        graph.addEdge("Sungai Pinang", "Jelutong", 2.8);
+        graph.addEdge("USM Gelugor", "Jelutong", 5.8);
+
+        graph.printEdges();
+
+        int start = graph.getIndex("Tanjung Bungah");
+        Tree bfsTree = graph.bfs(start);
+
+        System.out.println("\nBFS search order from Tanjung Bungah:");
+        for (int i : bfsTree.getSearchOrder()) {
+            System.out.print(graph.vertices.get(i) + " ");
+        }
+        System.out.println();
+
+        int destination = graph.getIndex("USM Gelugor");
+        System.out.println();
+        bfsTree.printPath(destination);
+
+        List<String> path = bfsTree.getPath(destination);
+        System.out.println("Number of bus stops: " + (path.size() - 1));
+        System.out.println("Total distance: " + graph.getPathDistance(path) + " KM");
+    }
+}
