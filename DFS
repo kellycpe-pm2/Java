@@ -1,0 +1,242 @@
+import java.util.*;
+
+public class DFS {
+    private List<String> vertices = new ArrayList<>();
+    private List<List<Edge>> neighbors = new ArrayList<>();
+    
+    public static class Edge {
+        public int u;
+        public int v;
+        public double weight;
+        
+        public Edge(int u, int v, double weight) {
+            this.u = u;
+            this.v = v;
+            this.weight = weight;
+        }
+    }
+    
+    public class Tree {
+        private int root;
+        private int[] parent;
+        private List<Integer> searchOrder;
+        
+        public Tree(int root, int[] parent, List<Integer> searchOrder) {
+            this.root = root;
+            this.parent = parent;
+            this.searchOrder = searchOrder;
+        }
+        
+        public int getRoot() { return root; }
+        public int[] getParent() { return parent; }
+        public List<Integer> getSearchOrder() { return searchOrder; }
+        public int getNumberOfVerticesFound() { return searchOrder.size(); }
+    }
+    
+    /**
+     * Add a vertex to the graph
+     */
+    public boolean addVertex(String vertex) {
+        if (!vertices.contains(vertex)) {
+            vertices.add(vertex);
+            neighbors.add(new ArrayList<>());
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Get the index of a vertex
+     */
+    public int getIndex(String vertex) {
+        return vertices.indexOf(vertex);
+    }
+    
+    /**
+     * Get the vertex at a specific index
+     */
+    public String getVertex(int index) {
+        return vertices.get(index);
+    }
+    
+    /**
+     * Add a weighted undirected edge
+     */
+    public boolean addEdge(String u, String v, double weight) {
+        int indexU = getIndex(u);
+        int indexV = getIndex(v);
+        if (indexU == -1 || indexV == -1) return false;
+        
+        neighbors.get(indexU).add(new Edge(indexU, indexV, weight));
+        neighbors.get(indexV).add(new Edge(indexV, indexU, weight));
+        return true;
+    }
+    
+    /**
+     * DFS algorithm implementation - finds path with minimum stops
+     */
+    public Tree dfs(String start, String end) {
+        int startIndex = getIndex(start);
+        int endIndex = getIndex(end);
+        
+        if (startIndex == -1 || endIndex == -1) {
+            return null;
+        }
+        
+        List<Integer> searchOrder = new ArrayList<>();
+        int[] parent = new int[vertices.size()];
+        Arrays.fill(parent, -1);
+        boolean[] visited = new boolean[vertices.size()];
+        
+        // Track best path found
+        List<Integer> bestPath = new ArrayList<>();
+        int[] minStops = {Integer.MAX_VALUE};
+        
+        // Start DFS recursion
+        dfsRecursive(startIndex, endIndex, visited, parent, searchOrder, bestPath, minStops);
+        
+        // If no path found
+        if (minStops[0] == Integer.MAX_VALUE) {
+            return null;
+        }
+        
+        // Build parent array from the best path
+        int[] pathParent = new int[vertices.size()];
+        Arrays.fill(pathParent, -1);
+        
+        for (int i = 0; i < bestPath.size() - 1; i++) {
+            pathParent[bestPath.get(i + 1)] = bestPath.get(i);
+        }
+        
+        return new Tree(startIndex, pathParent, searchOrder);
+    }
+    
+    /**
+     * Recursive DFS helper
+     */
+    private void dfsRecursive(int current, int end, boolean[] visited, 
+                             int[] parent, List<Integer> searchOrder,
+                             List<Integer> bestPath, int[] minStops) {
+        
+        // Mark current node as visited
+        visited[current] = true;
+        searchOrder.add(current);
+        
+        // If we reached the destination
+        if (current == end) {
+            // Check if this path has fewer stops
+            int stops = searchOrder.size() - 1;
+            if (stops < minStops[0]) {
+                minStops[0] = stops;
+                bestPath.clear();
+                bestPath.addAll(searchOrder);
+            }
+        } else {
+            // Explore all neighbors
+            for (Edge e : neighbors.get(current)) {
+                if (!visited[e.v]) {
+                    parent[e.v] = current;
+                    
+                    // Pruning: If we already found a path, don't explore deeper than current best
+                    if (minStops[0] != Integer.MAX_VALUE) {
+                        int currentDepth = searchOrder.size();
+                        if (currentDepth + 1 >= minStops[0]) {
+                            continue;
+                        }
+                    }
+                    
+                    dfsRecursive(e.v, end, visited, parent, searchOrder, bestPath, minStops);
+                }
+            }
+        }
+        
+        // Backtrack
+        visited[current] = false;
+        searchOrder.remove(searchOrder.size() - 1);
+    }
+    
+    /**
+     * Alternative iterative DFS implementation using stack
+     */
+    public Tree dfsIterative(String start, String end) {
+        int startIndex = getIndex(start);
+        int endIndex = getIndex(end);
+        
+        if (startIndex == -1 || endIndex == -1) {
+            return null;
+        }
+        
+        List<Integer> searchOrder = new ArrayList<>();
+        int[] parent = new int[vertices.size()];
+        Arrays.fill(parent, -1);
+        boolean[] visited = new boolean[vertices.size()];
+        Stack<Integer> stack = new Stack<>();
+        
+        stack.push(startIndex);
+        visited[startIndex] = true;
+        
+        while (!stack.isEmpty()) {
+            int u = stack.pop();
+            searchOrder.add(u);
+            
+            if (u == endIndex) {
+                return new Tree(startIndex, parent, searchOrder);
+            }
+            
+            // Push neighbors in reverse order to maintain order
+            for (int i = neighbors.get(u).size() - 1; i >= 0; i--) {
+                Edge e = neighbors.get(u).get(i);
+                if (!visited[e.v]) {
+                    visited[e.v] = true;
+                    parent[e.v] = u;
+                    stack.push(e.v);
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get the path from the tree
+     */
+    public List<String> getPathFromTree(Tree tree, String start, String end) {
+        if (tree == null) return null;
+        
+        int startIndex = getIndex(start);
+        int endIndex = getIndex(end);
+        if (startIndex == -1 || endIndex == -1) return null;
+        
+        List<String> path = new ArrayList<>();
+        int current = endIndex;
+        while (current != startIndex) {
+            path.add(vertices.get(current));
+            current = tree.parent[current];
+            if (current == -1) {
+                return null;
+            }
+        }
+        path.add(vertices.get(startIndex));
+        Collections.reverse(path);
+        return path;
+    }
+    
+    /**
+     * Get the number of stops in a path
+     */
+    public int getStops(List<String> path) {
+        return path != null ? path.size() - 1 : 0;
+    }
+    
+    /**
+     * Get the distance of a path using Dijkstra's graph data
+     */
+    public double getPathDistance(List<String> path, Dijkstra<String> dijkstra) {
+        if (path == null || path.size() < 2) return 0;
+        double total = 0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            total += dijkstra.getTravelTime(path.get(i), path.get(i + 1));
+        }
+        return total;
+    }
+}
