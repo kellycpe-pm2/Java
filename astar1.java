@@ -1,25 +1,33 @@
+
 import java.util.*;
 
-public class Dijkstra<V> extends AbstractGraph<V> {
+public class astar1<V> extends AbstractGraph<V> {
     
-    public Dijkstra() {
+    private Map<V, Map<V, Double>> heuristicMap;
+    
+    public astar1() {
         super();
+        this.heuristicMap = new HashMap<>();
     }
     
-    public Dijkstra(V[] vertices, int[][] edges) {
+    public astar1(V[] vertices, int[][] edges) {
         super(vertices, edges);
+        this.heuristicMap = new HashMap<>();
     }
     
-    public Dijkstra(List<V> vertices, List<Edge> edges) {
+    public astar1(List<V> vertices, List<Edge> edges) {
         super(vertices, edges);
+        this.heuristicMap = new HashMap<>();
     }
     
-    public Dijkstra(List<Edge> edges, int numberOfVertices) {
+    public astar1(List<Edge> edges, int numberOfVertices) {
         super(edges, numberOfVertices);
+        this.heuristicMap = new HashMap<>();
     }
     
-    public Dijkstra(int[][] edges, int numberOfVertices) {
+    public astar1(int[][] edges, int numberOfVertices) {
         super(edges, numberOfVertices);
+        this.heuristicMap = new HashMap<>();
     }
     
     /**
@@ -33,73 +41,54 @@ public class Dijkstra<V> extends AbstractGraph<V> {
     }
     
     /**
-     * Get the weight/distance between two vertices
+     * Add heuristic value - Java 8 compatible
      */
-    public double getWeight(V u, V v) {
-        int indexU = getIndex(u);
-        int indexV = getIndex(v);
-        if (indexU == -1 || indexV == -1) return Double.MAX_VALUE;
-        return getWeight(indexU, indexV);
-    }
-    
-    /**
-     * Get the weight/distance between two vertices by index
-     */
-    public double getWeight(int u, int v) {
-        for (Edge edge : neighbors.get(u)) {
-            if (edge.v == v) {
-                if (edge instanceof WeightedEdge) {
-                    return ((WeightedEdge) edge).weight;
-                }
-            }
+    public void addHeuristic(V from, V to, double value) {
+        if (!heuristicMap.containsKey(from)) {
+            heuristicMap.put(from, new HashMap<V, Double>());
         }
-        return Double.MAX_VALUE;
-    }
-    
-    /**
-     * Get total distance of a path
-     */
-    public double getPathDistance(List<V> path) {
-        if (path == null || path.size() < 2) return 0;
-        double total = 0;
-        for (int i = 0; i < path.size() - 1; i++) {
-            total += getWeight(path.get(i), path.get(i + 1));
+        heuristicMap.get(from).put(to, value);
+        
+        if (!heuristicMap.containsKey(to)) {
+            heuristicMap.put(to, new HashMap<V, Double>());
         }
-        return total;
+        heuristicMap.get(to).put(from, value);
     }
     
     /**
-     * Get number of stops in a path
+     * Get heuristic value
      */
-    public int getStops(List<V> path) {
-        return path != null ? path.size() - 1 : 0;
+    private double getHeuristic(V from, V to) {
+        if (heuristicMap.containsKey(from) && heuristicMap.get(from).containsKey(to)) {
+            return heuristicMap.get(from).get(to);
+        }
+        return 0;
     }
     
     /**
-     * Dijkstra's algorithm - finds shortest path by total distance
-     * This is optimal for finding the shortest distance route
+     * A* algorithm - finds shortest path using heuristic
      */
-    public Tree dijkstra(V start, V end) {
+    public Tree astar1(V start, V end) {
         int startIndex = getIndex(start);
         int endIndex = getIndex(end);
         
         if (startIndex == -1 || endIndex == -1) return null;
         
         int size = vertices.size();
-        double[] dist = new double[size];
+        double[] gScore = new double[size];
         int[] parent = new int[size];
         boolean[] visited = new boolean[size];
         List<Integer> searchOrder = new ArrayList<>();
         
-        Arrays.fill(dist, Double.MAX_VALUE);
+        Arrays.fill(gScore, Double.MAX_VALUE);
         Arrays.fill(parent, -1);
-        dist[startIndex] = 0;
+        gScore[startIndex] = 0;
         
-        PriorityQueue<NodeDistance> pq = new PriorityQueue<>();
-        pq.add(new NodeDistance(startIndex, 0));
+        PriorityQueue<NodeFScore> openSet = new PriorityQueue<>();
+        openSet.add(new NodeFScore(startIndex, getHeuristic(start, end)));
         
-        while (!pq.isEmpty()) {
-            NodeDistance current = pq.poll();
+        while (!openSet.isEmpty()) {
+            NodeFScore current = openSet.poll();
             int u = current.index;
             
             if (visited[u]) continue;
@@ -114,16 +103,18 @@ public class Dijkstra<V> extends AbstractGraph<V> {
                 int v = e.v;
                 if (!visited[v]) {
                     double weight = getWeight(u, v);
-                    if (dist[u] + weight < dist[v]) {
-                        dist[v] = dist[u] + weight;
+                    double tentativeG = gScore[u] + weight;
+                    if (tentativeG < gScore[v]) {
+                        gScore[v] = tentativeG;
                         parent[v] = u;
-                        pq.add(new NodeDistance(v, dist[v]));
+                        double fScore = tentativeG + getHeuristic(vertices.get(v), end);
+                        openSet.add(new NodeFScore(v, fScore));
                     }
                 }
             }
         }
         
-        return dist[endIndex] == Double.MAX_VALUE ? null : new Tree(startIndex, parent, searchOrder);
+        return gScore[endIndex] == Double.MAX_VALUE ? null : new Tree(startIndex, parent, searchOrder);
     }
     
     /**
@@ -149,7 +140,7 @@ public class Dijkstra<V> extends AbstractGraph<V> {
     }
     
     /**
-     * Print path with arrows
+     * Print path with arrows (no symbols)
      */
     public void printPath(List<V> path) {
         if (path == null || path.isEmpty()) {
@@ -161,22 +152,22 @@ public class Dijkstra<V> extends AbstractGraph<V> {
         for (int i = 0; i < path.size(); i++) {
             System.out.print(path.get(i));
             if (i < path.size() - 1) {
-                System.out.print(" → ");
+                System.out.print(" -> ");
             }
         }
         System.out.println();
     }
     
     /**
-     * Print detailed route with distances
+     * Print detailed route with distances and heuristics (no symbols)
      */
-    public void printRouteDetails(List<V> path) {
+    public void printRouteDetails(List<V> path, V end) {
         if (path == null || path.size() < 2) {
             System.out.println("No route found!");
             return;
         }
         
-        System.out.println("\n Route Details:");
+        System.out.println("\nRoute Details:");
         System.out.println("-".repeat(60));
         
         double totalDistance = 0;
@@ -184,9 +175,10 @@ public class Dijkstra<V> extends AbstractGraph<V> {
             V from = path.get(i);
             V to = path.get(i + 1);
             double dist = getWeight(from, to);
+            double heuristic = getHeuristic(to, end);
             totalDistance += dist;
-            System.out.printf("  %d. %-20s → %-20s (%.1f KM)%n", 
-                i + 1, from, to, dist);
+            System.out.printf("  %d. %-20s -> %-20s (%.1f KM, h=%.1f)%n", 
+                i + 1, from, to, dist, heuristic);
         }
         
         System.out.println("-".repeat(60));
@@ -195,23 +187,23 @@ public class Dijkstra<V> extends AbstractGraph<V> {
     }
     
     /**
-     * Print Dijkstra traversal result
+     * Print A* traversal result (no symbols)
      */
-    public void printDijkstraTree(Tree tree, V start, V end) {
+    public void printastar1Tree(Tree tree, V start, V end) {
         if (tree == null) {
-            System.out.println("No Dijkstra tree found!");
+            System.out.println("No A* tree found!");
             return;
         }
         
         System.out.println("\n" + "=".repeat(70));
-        System.out.println("DIJKSTRA TRAVERSAL from " + start + " to " + end);
+        System.out.println("A* TRAVERSAL from " + start + " to " + end);
         System.out.println("=".repeat(70));
         
         System.out.println("\nSearch Order:");
         for (int i = 0; i < tree.getSearchOrder().size(); i++) {
             System.out.print(vertices.get(tree.getSearchOrder().get(i)));
             if (i < tree.getSearchOrder().size() - 1) {
-                System.out.print(" → ");
+                System.out.print(" -> ");
             }
         }
         System.out.println();
@@ -221,22 +213,22 @@ public class Dijkstra<V> extends AbstractGraph<V> {
         
         System.out.println("\nNumber of vertices found: " + tree.getNumberOfVerticesFound());
     }
-    
+
     /**
-     * NodeDistance inner class for PriorityQueue
+     * NodeFScore inner class for PriorityQueue
      */
-    private static class NodeDistance implements Comparable<NodeDistance> {
+    private static class NodeFScore implements Comparable<NodeFScore> {
         int index;
-        double distance;
+        double fScore;
         
-        NodeDistance(int index, double distance) {
+        NodeFScore(int index, double fScore) {
             this.index = index;
-            this.distance = distance;
+            this.fScore = fScore;
         }
         
         @Override
-        public int compareTo(NodeDistance other) {
-            return Double.compare(this.distance, other.distance);
+        public int compareTo(NodeFScore other) {
+            return Double.compare(this.fScore, other.fScore);
         }
     }
 }

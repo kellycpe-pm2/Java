@@ -1,0 +1,27 @@
+11
+Batu Ferringhi
+Tanjung Bungah
+Straits Quay
+Pulau Tikus
+Gurney Drive
+Komtar
+Weld Quay
+Sungai Pinang
+Jelutong
+USM Gelugor
+www
+Batu Ferringhi,Tanjung Bungah,5.7
+Batu Ferringhi,Pulau Tikus,13.0
+Tanjung Bungah,Straits Quay,4.3
+Tanjung Bungah,Pulau Tikus,7.5
+Straits Quay,Pulau Tikus,5.9
+Straits Quay,Gurney Drive,4.4
+Straits Quay,Komtar,7.9
+Pulau Tikus,Komtar,4.4
+Gurney Drive,Komtar,3.5
+Gurney Drive,Weld Quay,4.9
+Komtar,Weld Quay,1.5
+Komtar,Sungai Pinang,2.4
+Komtar,USM Gelugor,9.0
+Sungai Pinang,Jelutong,2.8
+Jelutong,USM Gelugor,5.8
