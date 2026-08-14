@@ -6,7 +6,7 @@ public class BusRoute {
     private static BFS<String> bfs;
     private static DFS<String> dfs;
     private static Dijkstra<String> dijkstra;
-    private static astar1<String> astar1;
+    private static Astar<String> astar;
     private static List<String> stations;
     private static Scanner scanner;
     private static final String DATA_FILE = "bus_routes.txt";
@@ -37,7 +37,7 @@ public class BusRoute {
                     findRouteDijkstra();
                     break;
                 case "4":
-                    findRouteastar1();
+                    findRouteAstar();
                     break;
                 case "5":
                     showAllRoutes();
@@ -110,14 +110,14 @@ public class BusRoute {
         bfs = new BFS<>();
         dfs = new DFS<>();
         dijkstra = new Dijkstra<>();
-        astar1 = new astar1<>();
+        astar = new Astar<>();
         
         // Add all stations to algorithms
         for (String station : stations) {
             bfs.addVertex(station);
             dfs.addVertex(station);
             dijkstra.addVertex(station);
-            astar1.addVertex(station);
+            astar.addVertex(station);
         }
     }
     
@@ -149,6 +149,21 @@ public class BusRoute {
         addRouteToAlgorithms("Sungai Pinang", "Jelutong", 2.8);
         addRouteToAlgorithms("Jelutong", "USM Gelugor", 5.8);
         addRouteToAlgorithms("Komtar", "Sungai Pinang", 2.4);
+        addRouteToAlgorithms("Tanjung Bungah", "Batu Ferringhi", 5.7);
+        addRouteToAlgorithms("Pulau Tikus", "Batu Ferringhi", 13.0);
+        addRouteToAlgorithms("Pulau Tikus", "Tanjung Bungah", 7.5);
+        addRouteToAlgorithms("Straits Quay", "Tanjung Bungah", 4.3);
+        addRouteToAlgorithms("Pulau Tikus", "Straits Quay", 5.9);
+        addRouteToAlgorithms("Gurney Drive", "Straits Quay", 4.4);
+        addRouteToAlgorithms("Komtar", "Straits Quay", 7.9);
+        addRouteToAlgorithms("Komtar", "Pulau Tikus", 4.4);
+        addRouteToAlgorithms("Komtar", "Gurney Drive", 3.5);
+        addRouteToAlgorithms("Weld Quay", "Gurney Drive", 4.9);
+        addRouteToAlgorithms("Weld Quay", "Komtar", 1.5);
+        addRouteToAlgorithms("USM Gelugor", "Komtar", 9.0);
+        addRouteToAlgorithms("Jelutong", "Sungai Pinang", 2.8);
+        addRouteToAlgorithms("USM Gelugor", "Jelutong", 5.8);
+        addRouteToAlgorithms("Sungai Pinang", "Komtar", 2.4);
         
         // Add heuristics for A*
         addHeuristics();
@@ -163,22 +178,40 @@ public class BusRoute {
         bfs.addWeightedEdge(station1, station2, distance);
         dfs.addWeightedEdge(station1, station2, distance);
         dijkstra.addWeightedEdge(station1, station2, distance);
-        astar1.addWeightedEdge(station1, station2, distance);
+        astar.addWeightedEdge(station1, station2, distance);
     }
     
     private static void addHeuristics() {
-        astar1.addHeuristic("Batu Ferringhi", "Tanjung Bungah", 5.7);
-        astar1.addHeuristic("Batu Ferringhi", "Pulau Tikus", 13.0);
-        astar1.addHeuristic("Batu Ferringhi", "Komtar", 15.0);
-        astar1.addHeuristic("Tanjung Bungah", "Straits Quay", 4.3);
-        astar1.addHeuristic("Tanjung Bungah", "Komtar", 9.0);
-        astar1.addHeuristic("Straits Quay", "Komtar", 7.9);
-        astar1.addHeuristic("Pulau Tikus", "Komtar", 4.4);
-        astar1.addHeuristic("Gurney Drive", "Komtar", 3.5);
-        astar1.addHeuristic("Komtar", "Weld Quay", 1.5);
-        astar1.addHeuristic("Komtar", "USM Gelugor", 9.0);
-        astar1.addHeuristic("Sungai Pinang", "Jelutong", 2.8);
-        astar1.addHeuristic("Jelutong", "USM Gelugor", 5.8);
+        astar.addHeuristic("Batu Ferringhi", "Tanjung Bungah", 5.7);
+        astar.addHeuristic("Batu Ferringhi", "Pulau Tikus", 13.0);
+        astar.addHeuristic("Tanjung Bungah", "Pulau Tikus", 7.5);
+        astar.addHeuristic("Tanjung Bungah", "Straits Quay", 4.3);
+        astar.addHeuristic("Straits Quay", "Pulau Tikus", 5.9);
+        astar.addHeuristic("Straits Quay", "Gurney Drive", 4.4);
+        astar.addHeuristic("Straits Quay", "Komtar", 7.9);
+        astar.addHeuristic("Pulau Tikus", "Komtar", 4.4);
+        astar.addHeuristic("Gurney Drive", "Komtar", 3.5);
+        astar.addHeuristic("Gurney Drive", "Weld Quay", 4.9);
+        astar.addHeuristic("Komtar", "Weld Quay", 1.5);
+        astar.addHeuristic("Komtar", "USM Gelugor", 9.0);
+        astar.addHeuristic("Sungai Pinang", "Jelutong", 2.8);
+        astar.addHeuristic("Jelutong", "USM Gelugor", 5.8);
+        astar.addHeuristic("Komtar", "Sungai Pinang", 2.4);
+        astar.addHeuristic("Tanjung Bungah", "Batu Ferringhi", 5.7);
+        astar.addHeuristic("Pulau Tikus", "Batu Ferringhi", 13.0);
+        astar.addHeuristic("Pulau Tikus", "Tanjung Bungah", 7.5);
+        astar.addHeuristic("Straits Quay", "Tanjung Bungah", 4.3);
+        astar.addHeuristic("Pulau Tikus", "Straits Quay", 5.9);
+        astar.addHeuristic("Gurney Drive", "Straits Quay", 4.4);
+        astar.addHeuristic("Komtar", "Straits Quay", 7.9);
+        astar.addHeuristic("Komtar", "Pulau Tikus", 4.4);
+        astar.addHeuristic("Komtar", "Gurney Drive", 3.5);
+        astar.addHeuristic("Weld Quay", "Gurney Drive", 4.9);
+        astar.addHeuristic("Weld Quay", "Komtar", 1.5);
+        astar.addHeuristic("USM Gelugor", "Komtar", 9.0);
+        astar.addHeuristic("Jelutong", "Sungai Pinang", 2.8);
+        astar.addHeuristic("USM Gelugor", "Jelutong", 5.8);
+        astar.addHeuristic("Sungai Pinang", "Komtar", 2.4); 
     }
     
     // ============================================
@@ -207,7 +240,7 @@ public class BusRoute {
         bfs.addVertex(newStation);
         dfs.addVertex(newStation);
         dijkstra.addVertex(newStation);
-        astar1.addVertex(newStation);
+        astar.addVertex(newStation);
         stations.add(newStation);
         
         System.out.println("Station '" + newStation + "' added successfully!");
@@ -276,7 +309,7 @@ public class BusRoute {
         bfs = new BFS<>();
         dfs = new DFS<>();
         dijkstra = new Dijkstra<>();
-        astar1 = new astar1<>();
+        astar = new Astar<>();
         
         // Add all remaining stations
         for (int i = 0; i < stations.size(); i++) {
@@ -285,7 +318,7 @@ public class BusRoute {
                 bfs.addVertex(station);
                 dfs.addVertex(station);
                 dijkstra.addVertex(station);
-                astar1.addVertex(station);
+                astar.addVertex(station);
             }
         }
         
@@ -355,7 +388,7 @@ public class BusRoute {
             addRouteToAlgorithms(from, to, distance);
             
             // Add heuristic for A*
-            astar1.addHeuristic(from, to, distance);
+            astar.addHeuristic(from, to, distance);
             
             System.out.println("Route added successfully!");
             System.out.println("  " + from + " <-> " + to + " (" + distance + " KM)");
@@ -431,14 +464,14 @@ public class BusRoute {
         bfs = new BFS<>();
         dfs = new DFS<>();
         dijkstra = new Dijkstra<>();
-        astar1 = new astar1<>();
+        astar = new Astar<>();
         
         // Add all stations
         for (String station : stations) {
             bfs.addVertex(station);
             dfs.addVertex(station);
             dijkstra.addVertex(station);
-            astar1.addVertex(station);
+            astar.addVertex(station);
         }
         
         // Add all routes except the one to remove
@@ -676,7 +709,7 @@ public class BusRoute {
         printResult("Dijkstra", start, dest, path, stops, totalDistance, nodesExplored, timeMs);
     }
     
-    private static void findRouteastar1() {
+    private static void findRouteAstar() {
         System.out.println("\n" + "=".repeat(80));
         System.out.println("A* - SHORTEST DISTANCE WITH HEURISTIC");
         System.out.println("=".repeat(80));
@@ -689,7 +722,7 @@ public class BusRoute {
         String dest = input[1];
         
         long startTime = System.nanoTime();
-        AbstractGraph<String>.Tree tree = astar1.astar1(start, dest);
+        AbstractGraph<String>.Tree tree = astar.solve(start, dest);
         long endTime = System.nanoTime();
         double timeMs = (endTime - startTime) / 1_000_000.0;
         
@@ -698,9 +731,9 @@ public class BusRoute {
             return;
         }
         
-        List<String> path = astar1.getPathFromTree(tree, start, dest);
-        int stops = astar1.getStops(path);
-        double totalDistance = astar1.getPathDistance(path);
+        List<String> path = astar.getPath(tree, start, dest);
+        int stops = astar.getStops(path);
+        double totalDistance = astar.getPathDistance(path);
         int nodesExplored = tree.getNumberOfVerticesFound();
         
         printResult("A*", start, dest, path, stops, totalDistance, nodesExplored, timeMs);
